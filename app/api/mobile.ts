@@ -54,3 +54,14 @@ export const getTimeTable = async (token: string) => {
   if (!res.ok) throw new Error("Failed to fetch timetable");
   return res.json();
 };
+
+export const getParentHome = async (token: string) => {
+  const res = await fetch(`${BASE_URL}/mobile/parent/home`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch parent home data");
+  return res.json();
+};

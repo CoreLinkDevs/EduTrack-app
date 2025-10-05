@@ -21,12 +21,14 @@ export const registerUser = async (data: any) => {
   return res.data;
 };
 
-export const refreshTokenApi = async (refreshToken: string) => {
-  const res = await fetch("https://edutrack-backend-p3f4.onrender.com/api/auth/refresh-token", {
+export const refreshToken = async (refreshToken: string) => {
+  const BASE_URL = "https://edutrack-backend-p3f4.onrender.com";
+  const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refreshToken }),
   });
+  if (!res.ok) throw new Error("Refresh token failed");
   return res.json();
 };
 

@@ -3,18 +3,54 @@
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView, Image, Modal } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { getParentHome } from "./api/mobile"
 import { useAuth } from "./context/AuthContext"
 
 const DashboardScreen = () => {
   const router = useRouter()
   const [menuVisible, setMenuVisible] = useState(false)
-  const { user } = useAuth()
+  const { user, token } = useAuth()
+  const [homeData, setHomeData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
-  // Get parent's first name
-  const parentFirstName = user?.name ? user.name.split(" ")[0] : "Parent"
-  const studentName = "Student Name"
-  const studentClass = "Class"
+  // Fetch home data for the parent
+  useEffect(() => {
+    if (!token) return
+    setLoading(true)
+    getParentHome(token)
+      .then(setHomeData)
+      .catch(() => setError("Failed to load home data"))
+      .finally(() => setLoading(false))
+  }, [token])
+
+  // Get parent's first name from API response
+  const parentFirstName = homeData?.parent?.name
+    ? homeData.parent.name.split(" ")[0]
+    : "Parent";
+
+  // Get first child's info from API response
+  const firstChild = Array.isArray(homeData?.children) && homeData.children.length > 0
+    ? homeData.children[0]
+    : null;
+  const studentName = firstChild?.name || "No student found";
+  const studentClass = firstChild?.class || "No class found";
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ color: "red" }}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -139,11 +175,14 @@ const DashboardScreen = () => {
               <View style={styles.childInfo}>
                 <Text style={styles.childLabel}>Student Profile</Text>
                 <Text style={styles.childName}>{studentName}</Text>
-                <View style={styles.classContainer}>
-                  <Text style={styles.childClass}>{studentClass}</Text>
-                  <View style={styles.achievementBadge}>
-                    <Text style={styles.achievementText}>Honor Student</Text>
-                  </View>
+                <Text style={styles.childClass}>{studentClass}</Text>
+                {!firstChild && (
+                  <Text style={{ color: "#e53e3e", marginTop: 8 }}>
+                    No child profile found for this parent.
+                  </Text>
+                )}
+                <View style={styles.achievementBadge}>
+                  <Text style={styles.achievementText}>Honor Student</Text>
                 </View>
               </View>
               <TouchableOpacity

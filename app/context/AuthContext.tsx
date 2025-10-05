@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginUser, logoutUser, refreshTokenApi } from '../api/auth';
+import { loginUser, logoutUser, refreshToken as refreshTokenApi } from '../api/auth';
 import { setAuthToken } from '../api';
 
 // Define the user shape
@@ -50,17 +50,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Refresh access token method
+  // Call this when you get a 401 or before making protected requests
   const refreshAccessToken = async () => {
     if (!refreshToken) return false;
     try {
       const res = await refreshTokenApi(refreshToken);
-      if (res && res.accessToken) {
-        setToken(res.accessToken);
-        return true;
-      }
-      return false;
-    } catch (error) {
+      setToken(res.accessToken);
+      setRefreshToken(res.refreshToken); // If backend returns a new refreshToken
+      return true;
+    } catch (e) {
+      setToken(null);
+      setRefreshToken(null);
       return false;
     }
   };
